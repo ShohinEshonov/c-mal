@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+// some singlton objects
+MalType mal_nil = {.type = MAL_NIL};
+MalType mal_true = {.type = MAL_TRUE};
+MalType mal_false = {.type = MAL_FALSE};
+
 
 static void mal_list_append(MalType *list, MalType *item) {
   if (list->value.list.count >= list->value.list.capacity) {
@@ -30,8 +35,54 @@ static MalType *mal_new_list()
   node->type = MAL_LIST;
   node->value.list.items = NULL;
   node->value.list.count = 0;
+  node->value.list.capacity = 0;
   return node;
 }
+
+
+
+static MalType *mal_new_string(char *start_ptr, size_t length)
+{   
+  MalType* item = malloc(sizeof(MalType));
+  item->type = MAL_STRING;
+  item->value.str = malloc(length + 1);
+  size_t str_len = 0;
+
+  
+  for(size_t i = 0; i < length; i++)
+  {
+    char c = start_ptr[i];
+
+    if(c == '\\' && i + 1 < length)
+    {
+      char next = start_ptr[++i];
+
+      switch(next)
+      {
+        case 'n':
+          item->value.str[str_len++] = '\n';
+          break;
+        case '"':
+          item->value.str[str_len++] = '"';
+          break;
+        case '\\':
+          item->value.str[str_len++] = '\\';
+          break;
+        default:
+          item->value.str[str_len++] = next;
+          break; 
+      }
+    }else{
+      item->value.str[str_len++] = c;
+    }
+  }
+
+  item->value.str[str_len] = '\0';
+  return item;
+}
+
+
+
 
 static Token* peek(Reader* reader)
 {
@@ -55,16 +106,29 @@ static MalType* read_atom(Reader* reader)
 
   if(t->type == TOKEN_SYMBOL)
   {
-    MalType* item = malloc(sizeof(MalType));
-    item->type = MAL_SYMBOL;
-    item->value.symbol = strndup(t->lexeme_str, t->length);
-    return item;
+    char *symbol = strndup(t->start_ptr, t->length);
+    if(strcmp(symbol, "true") == 0)
+    {
+      free(symbol);
+      return &mal_true;
+    }
+    if(strcmp(symbol, "false") == 0)
+    {
+      free(symbol);
+      return &mal_false;
+    }
+    if(strcmp(symbol, "nil") == 0)
+    {
+      free(symbol);
+      return &mal_nil;
+    }
+    MalType *node = malloc(sizeof(MalType));
+    node->type = MAL_SYMBOL;
+    node->value.symbol = symbol;
+    return node;
   }else if(t->type == TOKEN_STRING)
   {
-    MalType* item = malloc(sizeof(MalType));
-    item->type = MAL_STRING;
-    item->value.str = strndup(t->lexeme_str, t->length);
-    return item;
+    return mal_new_string(t->start_ptr, t->length);
   }
   
 }

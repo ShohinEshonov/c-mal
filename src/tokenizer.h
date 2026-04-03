@@ -25,6 +25,8 @@ typedef enum
   TOKEN_SPLICE,
 
   TOKEN_STRING,
+  TOKEN_NUMBER_INT,
+  TOKEN_NUMBER_DOUBLE,
   TOKEN_SYMBOL,
 
   TOKEN_EOF,
@@ -61,6 +63,6 @@ typedef struct
 Tokenizer *init_tokenizer(char* source);
 TokenArray tokenize(Tokenizer *tokenizer);
 void free_tokens(TokenArray *tokens);
-
+void tokenizer_free(Tokenizer *t);
 
 #endif

@@ -24,21 +24,13 @@ static void da_append(TokenArray *tokens, Token *token) {
 }
 
 void free_tokens(TokenArray *tokens) {
-  for (int i = 0; i < tokens->count; i++) {
-    Token *t = &tokens->items[i];
-
-    if (t->type == TOKEN_STRING) {
-      free(t->lexeme_str);
-    }
-  }
   free(tokens->items);
 }
 
-static void tokenizer_free(Tokenizer *t) {
-    free_tokens(&t->tokens);
-    free(t);
+void tokenizer_free(Tokenizer *t) {
+  free_tokens(&t->tokens);
+  free(t);
 }
-
 
 static char next(Tokenizer *tokenizer) {
   return tokenizer->source[tokenizer->current++];
@@ -55,53 +47,39 @@ static char peek(Tokenizer *tokenizer) {
   return tokenizer->source[tokenizer->current];
 }
 
-static void parse_string(Tokenizer *tokenizer) {
-  char buffer[2048];
-  int len = 0;
+static void scan_string(Tokenizer *tokenizer) {
   while (peek(tokenizer) != '"') {
     if (is_at_end(tokenizer)) {
-      fprintf(stderr, "%d:%d Error: Unterminated string.\n", tokenizer->current,
-              tokenizer->line);
+      fprintf(stderr, "%d:%d Error: Unterminated string.\n", tokenizer->line,
+              tokenizer->current);
       tokenizer_free(tokenizer);
       exit(1);
     }
-
-    char c = next(tokenizer);
-
-    if (c == '\\') {
-      c = next(tokenizer);
-
+    if (peek(tokenizer) == '\\') {
+      next(tokenizer);
       if (is_at_end(tokenizer)) {
-        fprintf(stderr, "%d:%d Error: Unterminated string.\n",
-                tokenizer->current, tokenizer->line);
+        fprintf(stderr, "%d:%d Error: Undeterminated escape.\n",
+                tokenizer->line, tokenizer->current);
         tokenizer_free(tokenizer);
         exit(1);
       }
-
-      switch (c) {
-      case '"':
-        buffer[len++] = '"';
-        break;
-      }
-    } else {
-      buffer[len++] = c;
+      next(tokenizer);
+      continue;
     }
-
-    if (len >= 2047) {
-      fprintf(stderr, "String too long\n");
-      tokenizer_free(tokenizer);
-      exit(1);
-    }
+    next(tokenizer);
   }
   next(tokenizer);
-  buffer[len] = '\0';
+  printf("DEBUG: start=%d current=%d source[start]='%c' source[current-2]='%c' source[current-1]='%c'\n",
+       tokenizer->start,
+       tokenizer->current,
+       tokenizer->source[tokenizer->start],
+       tokenizer->source[tokenizer->current - 2],
+       tokenizer->source[tokenizer->current - 1]);
 
-  char *str = strdup(buffer);
   Token token = {.type = TOKEN_STRING,
-                 .lexeme_str = str,
-                 .length = len,
+                 .start_ptr = &tokenizer->source[tokenizer->start],
+                 .length = tokenizer->current - 1 - tokenizer->start,
                  .line = tokenizer->line};
-
   da_append(&tokenizer->tokens, &token);
 }
 
@@ -115,6 +93,34 @@ static void scan_symbol(Tokenizer *tokenizer) {
                  .start_ptr = &tokenizer->source[tokenizer->start],
                  .length = tokenizer->current - tokenizer->start,
                  .line = tokenizer->line};
+  da_append(&tokenizer->tokens, &token);
+}
+
+void scan_number(Tokenizer *tokenizer) {
+  TokenType type = TOKEN_NUMBER_INT;
+  while (isdigit((unsigned char)peek(tokenizer))) {
+    next(tokenizer);
+  }
+  if (peek(tokenizer) == '.') {
+    next(tokenizer);
+    if (!isdigit((unsigned char)peek(tokenizer))) {
+      fprintf(stderr, "%d:%d Unexpected character after '.' .", tokenizer->line,
+              tokenizer->current);
+      tokenizer_free(tokenizer);
+    }
+
+    type = TOKEN_NUMBER_DOUBLE;
+
+    while (isdigit((unsigned char)peek(tokenizer))) {
+      next(tokenizer);
+    }
+  }
+
+  Token token = {.type = type,
+                 .start_ptr = &tokenizer->source[tokenizer->start],
+                 .length = tokenizer->current - tokenizer->start,
+                 .line = tokenizer->line};
+
   da_append(&tokenizer->tokens, &token);
 }
 
@@ -161,13 +167,16 @@ static void scan_token(Tokenizer *tokenizer) {
     Token token = {.type = TOKEN_CARET, .line = tokenizer->line};
     da_append(&tokenizer->tokens, &token);
   } else if (c == '"') {
-    parse_string(tokenizer);
+    tokenizer->start++;
+    scan_string(tokenizer);
   } else if (c == ';') {
     while (peek(tokenizer) != '\n' && !is_at_end(tokenizer)) {
       next(tokenizer);
     }
   } else if (!isspace(c) && !strchr("()[]{}'`~^@", c)) {
     scan_symbol(tokenizer);
+  } else if (isdigit((unsigned char)c)) {
+    scan_number(tokenizer);
   } else {
     fprintf(stderr, "%d:%d Error: Unexpected character", tokenizer->line,
             tokenizer->current);

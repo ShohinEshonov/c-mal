@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "tokenizer.h"
 #include "reader.h"
 #include "printer.h"
@@ -10,14 +11,13 @@ MalType *READ(TokenArray tokens)
 {
   Reader* reader = init_reader(tokens);
   MalType* ast = read_form(reader);
-  free_tokens(&tokens);
   free(reader);
   return ast; 
 }
 
 char *EVAL(char *str) { return str; }
 
-void PRINT(MalType* ast) { pr_str(ast); printf("\n"); }
+void PRINT(MalType* ast) { pr_str(ast, true); printf("\n"); }
 
 void rep(char *str) {
 
@@ -66,7 +66,7 @@ void rep(char *str) {
       printf("TOKEN_SPLICE");
     }else if(tokens.items[i].type == TOKEN_STRING)
     {
-      printf("TOKEN_STRING: %s\n", tokens.items[i].lexeme_str);
+      printf("TOKEN_STRING: %.*s\n", (int)tokens.items[i].length ,tokens.items[i].start_ptr);
     }else if(tokens.items[i].type == TOKEN_SYMBOL)
     {
       char *symb =  strndup(tokens.items[i].start_ptr, tokens.items[i].length);
@@ -80,14 +80,14 @@ void rep(char *str) {
 
   MalType* ast = READ(tokens);
   PRINT(ast);
-  free(tokenizer);
+  tokenizer_free(tokenizer);
 }
 
 int main() {
   while (1) {
     char buffer[2048];
     printf("user> ");
-
+    fflush(stdout);
     if(fgets(buffer, sizeof(buffer), stdin) == NULL)
     {
       break;

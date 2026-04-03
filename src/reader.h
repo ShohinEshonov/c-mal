@@ -12,13 +12,14 @@ typedef struct
   int current;  
 }Reader;
 
-
-
 typedef enum
 {
   MAL_SYMBOL,
   MAL_STRING,
   MAL_LIST,
+  MAL_TRUE,
+  MAL_FALSE,
+  MAL_NIL,
 }MalTypeTag;
 
 
