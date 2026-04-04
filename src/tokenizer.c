@@ -52,16 +52,13 @@ static void scan_string(Tokenizer *tokenizer) {
     if (is_at_end(tokenizer)) {
       fprintf(stderr, "%d:%d Error: Unterminated string.\n", tokenizer->line,
               tokenizer->current);
-      tokenizer_free(tokenizer);
-      exit(1);
+      return;
     }
     if (peek(tokenizer) == '\\') {
       next(tokenizer);
       if (is_at_end(tokenizer)) {
         fprintf(stderr, "%d:%d Error: Undeterminated escape.\n",
                 tokenizer->line, tokenizer->current);
-        tokenizer_free(tokenizer);
-        exit(1);
       }
       next(tokenizer);
       continue;
@@ -69,13 +66,6 @@ static void scan_string(Tokenizer *tokenizer) {
     next(tokenizer);
   }
   next(tokenizer);
-  printf("DEBUG: start=%d current=%d source[start]='%c' source[current-2]='%c' source[current-1]='%c'\n",
-       tokenizer->start,
-       tokenizer->current,
-       tokenizer->source[tokenizer->start],
-       tokenizer->source[tokenizer->current - 2],
-       tokenizer->source[tokenizer->current - 1]);
-
   Token token = {.type = TOKEN_STRING,
                  .start_ptr = &tokenizer->source[tokenizer->start],
                  .length = tokenizer->current - 1 - tokenizer->start,
@@ -106,7 +96,7 @@ void scan_number(Tokenizer *tokenizer) {
     if (!isdigit((unsigned char)peek(tokenizer))) {
       fprintf(stderr, "%d:%d Unexpected character after '.' .", tokenizer->line,
               tokenizer->current);
-      tokenizer_free(tokenizer);
+      return;
     }
 
     type = TOKEN_NUMBER_DOUBLE;
@@ -178,10 +168,8 @@ static void scan_token(Tokenizer *tokenizer) {
   } else if (isdigit((unsigned char)c)) {
     scan_number(tokenizer);
   } else {
-    fprintf(stderr, "%d:%d Error: Unexpected character", tokenizer->line,
+    fprintf(stderr, "%d:%d Error: Unexpected character\n", tokenizer->line,
             tokenizer->current);
-    tokenizer_free(tokenizer);
-    exit(1);
   }
 }
 

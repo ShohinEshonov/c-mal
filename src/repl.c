@@ -5,7 +5,8 @@
 #include <stdbool.h>
 #include "tokenizer.h"
 #include "reader.h"
-#include "printer.h"
+#include "types.h"
+
 
 MalType *READ(TokenArray tokens)
 {
@@ -25,7 +26,7 @@ void rep(char *str) {
   TokenArray tokens = tokenize(tokenizer);
 
 
-  for(int i = 0; i < tokens.count; i++)
+  for(size_t i = 0; i < tokens.count; i++)
   {
     if(tokens.items[i].type == TOKEN_L_PAREN)
     {
@@ -79,6 +80,11 @@ void rep(char *str) {
   }
 
   MalType* ast = READ(tokens);
+  if(ast == NULL)
+  {
+    tokenizer_free(tokenizer);
+    return;
+  }
   PRINT(ast);
   tokenizer_free(tokenizer);
 }
