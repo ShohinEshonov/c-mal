@@ -50,13 +50,19 @@ static MalType* read_atom(Reader* reader)
       free(symbol);
       return &mal_nil;
     }
-    MalType *node = malloc(sizeof(MalType));
-    node->type = MAL_SYMBOL;
-    node->value.symbol = symbol;
-    return node;
+    return mal_new_symbol(symbol);
   }else if(t->type == TOKEN_STRING)
   {
     return mal_new_string(t->start_ptr, t->length);
+  }else if(t->type == TOKEN_KEYWORD)
+  {
+    return mal_new_keyword(t->start_ptr, t->length);
+  }else if(t->type == TOKEN_NUMBER_INT)
+  {
+    return mal_new_num_int(t->start_ptr, t->length);
+  }else if(t->type == TOKEN_NUMBER_DOUBLE)
+  {
+    return mal_new_num_double(t->start_ptr, t->length);
   }
   return NULL;  
 }

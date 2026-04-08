@@ -28,7 +28,8 @@ typedef enum
   TOKEN_NUMBER_INT,
   TOKEN_NUMBER_DOUBLE,
   TOKEN_SYMBOL,
-
+  TOKEN_KEYWORD,
+  
   TOKEN_EOF,
 }TokenType;
 

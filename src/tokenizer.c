@@ -86,7 +86,7 @@ static void scan_symbol(Tokenizer *tokenizer) {
   da_append(&tokenizer->tokens, &token);
 }
 
-void scan_number(Tokenizer *tokenizer) {
+static void scan_number(Tokenizer *tokenizer) {
   TokenType type = TOKEN_NUMBER_INT;
   while (isdigit((unsigned char)peek(tokenizer))) {
     next(tokenizer);
@@ -113,6 +113,25 @@ void scan_number(Tokenizer *tokenizer) {
 
   da_append(&tokenizer->tokens, &token);
 }
+
+
+static void scan_keyword(Tokenizer *tokenizer) {
+ while (!is_at_end(tokenizer) && 
+         !isspace((unsigned char)peek(tokenizer)) &&
+         !strchr("()[]{}'`~^@", peek(tokenizer))) {
+    next(tokenizer);
+  }
+  Token token = {.type = TOKEN_KEYWORD,
+                 .start_ptr = &tokenizer->source[tokenizer->start],
+                 .length = tokenizer->current - tokenizer->start,
+                 .line = tokenizer->line};
+  da_append(&tokenizer->tokens, &token);
+}
+
+
+
+
+
 
 static void scan_token(Tokenizer *tokenizer) {
   char c = next(tokenizer);
@@ -163,10 +182,14 @@ static void scan_token(Tokenizer *tokenizer) {
     while (peek(tokenizer) != '\n' && !is_at_end(tokenizer)) {
       next(tokenizer);
     }
-  } else if (!isspace(c) && !strchr("()[]{}'`~^@", c)) {
-    scan_symbol(tokenizer);
-  } else if (isdigit((unsigned char)c)) {
+  }else if(c == ':')
+  {
+    scan_keyword(tokenizer);
+  }
+  else if (isdigit((unsigned char)c)) {
     scan_number(tokenizer);
+  }else if (!isspace(c) && !strchr("()[]{}'`~^@", c)) {
+    scan_symbol(tokenizer);
   } else {
     fprintf(stderr, "%d:%d Error: Unexpected character\n", tokenizer->line,
             tokenizer->current);

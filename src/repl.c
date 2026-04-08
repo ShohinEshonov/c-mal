@@ -67,13 +67,31 @@ void rep(char *str) {
       printf("TOKEN_SPLICE");
     }else if(tokens.items[i].type == TOKEN_STRING)
     {
-      printf("TOKEN_STRING: %.*s\n", (int)tokens.items[i].length ,tokens.items[i].start_ptr);
+      char *str = strndup(tokens.items[i].start_ptr, tokens.items[i].length);
+      printf("TOKEN_STRING: %s\n", str);
+      free(str);
     }else if(tokens.items[i].type == TOKEN_SYMBOL)
     {
       char *symb =  strndup(tokens.items[i].start_ptr, tokens.items[i].length);
       printf("TOKEN_SYMBOL: %s\n", symb);
       free(symb);
-    }else if(tokens.items[i].type == TOKEN_EOF)
+    }else if(tokens.items[i].type == TOKEN_KEYWORD)
+    {
+      char *keyword =  strndup(tokens.items[i].start_ptr, tokens.items[i].length);
+      printf("TOKEN_KEYWORD: %s\n", keyword);
+      free(keyword);
+    }else if(tokens.items[i].type == TOKEN_NUMBER_INT)
+    {
+      char *num_int = strndup(tokens.items[i].start_ptr, tokens.items[i].length);
+      printf("TOKEN_NUMBER_INT: %s\n", num_int);
+      free(num_int);
+    }else if(tokens.items[i].type == TOKEN_NUMBER_DOUBLE)
+    {
+      char *num_dou = strndup(tokens.items[i].start_ptr, tokens.items[i].length);
+      printf("TOKEN_NUMBER_DOUBLE: %s\n", num_dou);
+      free(num_dou);
+    }
+    else if(tokens.items[i].type == TOKEN_EOF)
     {
       printf("TOKEN_EOF\n");
     }
@@ -87,6 +105,7 @@ void rep(char *str) {
   }
   PRINT(ast);
   tokenizer_free(tokenizer);
+  free_ast(ast);
 }
 
 int main() {
