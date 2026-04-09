@@ -68,22 +68,31 @@ static MalType* read_atom(Reader* reader)
 }
 
 
-static MalType* read_list(Reader* reader)
+static MalType* read_list(Reader* reader, TokenType closingToken)
 {
   next(reader);
-  MalType *list = mal_new_list();
+  MalType *list;
+  if(closingToken == TOKEN_R_PAREN)
+  {    
+    list = mal_new_list();
+  }
 
+  if(closingToken == TOKEN_R_BRACKET)
+  {    
+    list = mal_new_vector();
+  }
+  
   Token *t;
   while(1)
   {
     t = peek(reader);
     if(t->type == TOKEN_EOF)
     {
-      fprintf(stderr, "%d ERROR: Unclosed  parentesize.\n", t->line);
+      fprintf(stderr, "%d ERROR: Unclosed parentesize.\n", t->line);
       return NULL;
     
     }
-    if(t->type == TOKEN_R_PAREN)
+    if(t->type == closingToken)
     {
       next(reader);
       break;
@@ -101,8 +110,12 @@ MalType* read_form(Reader* reader)
   if(t->type == TOKEN_EOF) return NULL;
   if(t->type == TOKEN_L_PAREN)
   {
-    return  read_list(reader);
-  }else
+    return  read_list(reader, TOKEN_R_PAREN);
+  }else if(t->type == TOKEN_L_BRACKET)
+  {
+    return read_list(reader, TOKEN_R_BRACKET);
+  }
+  else
   {
      return read_atom(reader);
   }

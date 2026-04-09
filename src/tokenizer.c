@@ -88,6 +88,10 @@ static void scan_symbol(Tokenizer *tokenizer) {
 
 static void scan_number(Tokenizer *tokenizer) {
   TokenType type = TOKEN_NUMBER_INT;
+  if(peek(tokenizer) == '-')
+  {
+    next(tokenizer);
+  }
   while (isdigit((unsigned char)peek(tokenizer))) {
     next(tokenizer);
   }
@@ -185,8 +189,16 @@ static void scan_token(Tokenizer *tokenizer) {
   }else if(c == ':')
   {
     scan_keyword(tokenizer);
-  }
-  else if (isdigit((unsigned char)c)) {
+  }else if(c == '-')
+  {
+    if(isdigit((unsigned char)peek(tokenizer)))
+    {
+      scan_number(tokenizer);
+    }else
+    {
+      scan_symbol(tokenizer);
+    }
+  }else if (isdigit((unsigned char)c)) {
     scan_number(tokenizer);
   }else if (!isspace(c) && !strchr("()[]{}'`~^@", c)) {
     scan_symbol(tokenizer);

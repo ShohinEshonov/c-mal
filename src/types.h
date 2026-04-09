@@ -19,7 +19,7 @@ typedef enum
   MAL_KEYWORD,
   MAL_INT,
   MAL_DOUBLE,
-
+  MAL_VECTOR,
 }MalTypeTag;
 
 
@@ -42,7 +42,8 @@ typedef struct MalType
   }value;
 }MalType;
 
-MalType *mal_new_list();
+MalType* mal_new_list();
+MalType* mal_new_vector();
 void mal_list_append(MalType *list, MalType *item);
 MalType* mal_new_string(char *start_ptr, size_t length);
 MalType* mal_new_symbol(char *symbol);
