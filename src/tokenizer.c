@@ -152,7 +152,12 @@ static void scan_token(Tokenizer *tokenizer) {
       Token token = {.type = TOKEN_TILDE, .line = tokenizer->line};
       da_append(&tokenizer->tokens, &token);
     }
-  } else if (c == '(') {
+  }else if(c == '@')
+  {
+    Token token = {.type = TOKEN_AT, .line = tokenizer->line};
+    da_append(&tokenizer->tokens, &token);
+  }
+  else if (c == '(') {
     Token token = {.type = TOKEN_L_PAREN, .line = tokenizer->line};
     da_append(&tokenizer->tokens, &token);
   } else if (c == ')') {

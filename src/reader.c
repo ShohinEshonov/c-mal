@@ -25,6 +25,25 @@ static Token* next(Reader* reader)
 
 
 
+static MalType* read_macro(Reader* reader, char* name)
+{
+  MalType *form = read_form(reader);
+  if(!form)
+  {
+    fprintf(stderr, "Error: Expected form after macros '%s'\n", name);
+    return NULL;
+  }
+
+  
+  MalType *list = mal_new_list();
+  
+  mal_list_append(list, mal_new_symbol(name));
+  mal_list_append(list, form);
+
+  return list;
+}
+
+
 
 
 static MalType* read_atom(Reader* reader)
@@ -63,6 +82,21 @@ static MalType* read_atom(Reader* reader)
   }else if(t->type == TOKEN_NUMBER_DOUBLE)
   {
     return mal_new_num_double(t->start_ptr, t->length);
+  }else if(t->type == TOKEN_AT)
+  {
+    return read_macro(reader, "deref");
+  }else if(t->type == TOKEN_QUOTE)
+  {
+    return read_macro(reader, "quote");
+  }else if(t->type == TOKEN_BACKTICK)
+  {
+    return read_macro(reader, "quasiquote"); 
+  }else if(t->type == TOKEN_TILDE)
+  {
+    return read_macro(reader, "unquote");
+  }else if(t->type == TOKEN_SPLICE)
+  {
+    return read_macro(reader, "splice-unquote");
   }
   return NULL;  
 }
@@ -81,6 +115,11 @@ static MalType* read_list(Reader* reader, TokenType closingToken)
   {    
     list = mal_new_vector();
   }
+
+  if(closingToken == TOKEN_R_BRACE)
+  {
+    list = mal_new_hashmap();
+  }
   
   Token *t;
   while(1)
@@ -89,6 +128,7 @@ static MalType* read_list(Reader* reader, TokenType closingToken)
     if(t->type == TOKEN_EOF)
     {
       fprintf(stderr, "%d ERROR: Unclosed parentesize.\n", t->line);
+      free_ast(list);
       return NULL;
     
     }
@@ -98,6 +138,11 @@ static MalType* read_list(Reader* reader, TokenType closingToken)
       break;
     }
     MalType *item = read_form(reader);
+    if(!item)
+    {
+      free_ast(list);
+      return NULL;
+    }
     mal_list_append(list, item);
   }
   return list;
@@ -114,6 +159,33 @@ MalType* read_form(Reader* reader)
   }else if(t->type == TOKEN_L_BRACKET)
   {
     return read_list(reader, TOKEN_R_BRACKET);
+  }else if(t->type == TOKEN_L_BRACE)
+  {
+    return read_list(reader, TOKEN_R_BRACE);
+  }else if(t->type == TOKEN_CARET)
+  {
+    next(reader);
+    MalType* meta = read_form(reader);
+    if(!meta)
+    {
+      fprintf(stderr, "Error: Expected form after ^.\n");
+      return NULL;
+    }
+    MalType* data = read_form(reader);
+    if(!data)
+    {
+      fprintf(stderr, "Error: Expected form after meta.\n");
+      free_ast(meta);
+      return NULL;
+    }
+    if(data->type == MAL_TRUE || data->type == MAL_FALSE || data->type == MAL_NIL)
+    {
+      fprintf(stderr, "Error: Cannot attach meta-data to  true/false/nil value.i\n");
+      free_ast(meta);
+      free_ast(data);
+      return NULL;
+    }
+    return wrap_meta(data, meta);
   }
   else
   {

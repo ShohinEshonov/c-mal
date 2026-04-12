@@ -20,6 +20,7 @@ typedef enum
   MAL_INT,
   MAL_DOUBLE,
   MAL_VECTOR,
+  MAL_HASHMAP,
 }MalTypeTag;
 
 
@@ -40,16 +41,19 @@ typedef struct MalType
       int capacity;
     }list;
   }value;
+  struct MalType* meta;
 }MalType;
 
 MalType* mal_new_list();
 MalType* mal_new_vector();
+MalType* mal_new_hashmap();
 void mal_list_append(MalType *list, MalType *item);
 MalType* mal_new_string(char *start_ptr, size_t length);
 MalType* mal_new_symbol(char *symbol);
 MalType* mal_new_keyword(char *start_ptr, size_t length);
 MalType* mal_new_num_int(char *start_ptr, size_t length);
 MalType* mal_new_num_double(char *start_ptr, size_t length);
+MalType* wrap_meta(MalType* data, MalType* meta);
 void pr_str(MalType *node, bool print_readably);
 void free_ast(MalType *node);
 
