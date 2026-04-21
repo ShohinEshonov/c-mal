@@ -2,19 +2,16 @@
 
 #define READER_H
 
-
 #include "tokenizer.h"
 #include "types.h"
 #include <stdint.h>
 
-typedef struct
-{
+typedef struct {
   TokenArray source;
-  int current;  
-}Reader;
+  int current;
+} Reader;
 
-
-Reader* init_reader(TokenArray tokens);
-MalType* read_form(Reader* reader);
+Reader *init_reader(TokenArray tokens);
+MalType *read_form(Reader *reader);
 
 #endif

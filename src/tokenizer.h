@@ -2,12 +2,9 @@
 
 #define TOKENIZER_H
 
-
 #include <unistd.h>
 
-
-typedef enum
-{
+typedef enum {
   TOKEN_L_PAREN,
   TOKEN_R_PAREN,
 
@@ -16,7 +13,7 @@ typedef enum
 
   TOKEN_L_BRACE,
   TOKEN_R_BRACE,
-  
+
   TOKEN_QUOTE,
   TOKEN_BACKTICK,
   TOKEN_TILDE,
@@ -30,39 +27,34 @@ typedef enum
   TOKEN_SYMBOL,
   TOKEN_KEYWORD,
 
-    
   TOKEN_EOF,
-}TokenType;
+} TokenType;
 
-
-typedef struct{
+typedef struct {
   TokenType type;
-  union{
-    char* lexeme_str;
-    char*  start_ptr;
+  union {
+    char *lexeme_str;
+    char *start_ptr;
   };
   size_t length;
   int line;
-}Token;
+} Token;
 
-
-typedef struct
-{
-  Token* items;
+typedef struct {
+  Token *items;
   size_t count;
   size_t capacity;
-}TokenArray;
+} TokenArray;
 
-typedef struct
-{
-  char* source;
+typedef struct {
+  char *source;
   TokenArray tokens;
   int start;
   int current;
-  int line; 
-}Tokenizer;
+  int line;
+} Tokenizer;
 
-Tokenizer *init_tokenizer(char* source);
+Tokenizer *init_tokenizer(char *source);
 TokenArray tokenize(Tokenizer *tokenizer);
 void free_tokens(TokenArray *tokens);
 void tokenizer_free(Tokenizer *t);
